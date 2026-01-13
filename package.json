@@ -4,6 +4,10 @@
   "description": "Handle vscode:// URIs to start Copilot chat with a prompt",
   "version": "0.0.1",
   "publisher": "xpl",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xpl/vscode-chat-uri"
+  },
   "engines": {
     "vscode": "^1.85.0"
   },
