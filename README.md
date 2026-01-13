@@ -1,4 +1,4 @@
-# Chat URI Handler
+# VSCode Chat URI Extension
 
 A VS Code extension that handles custom `vscode://` URIs to start Copilot chat with a prompt.
 
@@ -80,17 +80,3 @@ npm run watch
 3. If the path is `/startChat`, it extracts the `prompt` parameter
 4. It then calls `workbench.action.chat.open` with the prompt to open the Copilot chat
 
-## API Reference
-
-The extension uses the VS Code command `workbench.action.chat.open` which accepts:
-
-```typescript
-{
-  query: string;           // The prompt text
-  isPartialQuery?: boolean; // If true, waits for user input before sending
-}
-```
-
-## License
-
-MIT
