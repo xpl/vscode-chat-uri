@@ -1,4 +1,21 @@
 import * as vscode from "vscode";
+import pako from "pako";
+
+/**
+ * Converts a Uint8Array to a string
+ */
+function bytesToStr(bytes: Uint8Array): string {
+  return bytes.reduce((s, n) => s + String.fromCharCode(n), "");
+}
+
+/**
+ * Decompresses a base64-encoded gzipped string
+ */
+function decompress(base64: string): string {
+  const binaryString = Buffer.from(base64, "base64").toString("binary");
+  const arr = new Uint8Array([...binaryString].map((c) => c.charCodeAt(0)));
+  return bytesToStr(pako.inflate(arr));
+}
 
 /**
  * URI Handler that listens for custom vscode:// URIs
@@ -7,7 +24,8 @@ import * as vscode from "vscode";
  * vscode://xpl.chat-uri/startChat?prompt=Your%20prompt%20here
  *
  * Parameters:
- * - prompt: The chat prompt (URL encoded)
+ * - prompt: The chat prompt (URL encoded, optionally gzip compressed if gzip=1)
+ * - gzip: If "1", the prompt is base64-encoded gzipped data that will be decompressed
  * - partial: If "true", keeps prompt editable before sending
  * - mode: Chat mode - "agent" for agent mode, "ask" for ask mode, or "edit" for edit mode
  * - newChat: If "true", starts a new chat session (default: true)
@@ -24,6 +42,7 @@ class ChatUriHandler implements vscode.UriHandler {
 
     if (path === "/startChat" || path === "startChat") {
       const prompt = query.get("prompt");
+      const isGzip = query.get("gzip") === "1";
       const isPartial = query.get("partial") === "true";
       const mode = query.get("mode") || "agent"; // Default to agent mode
       const newChat = query.get("newChat") !== "false"; // Default to true
@@ -35,7 +54,22 @@ class ChatUriHandler implements vscode.UriHandler {
         }
 
         if (prompt) {
-          const decodedPrompt = decodeURIComponent(prompt);
+          // Decompress if gzip=1, otherwise just URL decode
+          let decodedPrompt: string;
+          if (isGzip) {
+            try {
+              decodedPrompt = decompress(decodeURIComponent(prompt));
+            } catch (e) {
+              console.error("Failed to decompress prompt:", e);
+              vscode.window.showErrorMessage(
+                `Failed to decompress prompt: ${e}`
+              );
+              return;
+            }
+          } else {
+            decodedPrompt = decodeURIComponent(prompt);
+          }
+
           console.log(
             `Starting chat with prompt: ${decodedPrompt}, mode: ${mode}`
           );

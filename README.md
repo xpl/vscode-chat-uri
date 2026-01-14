@@ -21,6 +21,7 @@ vscode://xpl.chat-uri/startChat?prompt=YOUR_ENCODED_PROMPT
 | Parameter | Description | Required |
 |-----------|-------------|----------|
 | `prompt` | URL-encoded prompt text to send to chat | No (opens empty chat if omitted) |
+| `gzip` | Set to `1` if the prompt is base64-encoded gzipped data | No (default: uncompressed) |
 | `partial` | Set to `true` to keep the prompt editable before sending | No (default: `false`) |
 | `mode` | Chat mode: `agent`, `ask`, or `edit` | No (default: `agent`) |
 | `newChat` | Set to `false` to continue in existing chat session | No (default: `true`) |
@@ -40,6 +41,24 @@ vscode://xpl.chat-uri/startChat?prompt=YOUR_ENCODED_PROMPT
 3. **Open empty chat**:
    ```
    vscode://xpl.chat-uri/startChat
+   ```
+
+4. **Compressed prompt** (for long prompts that exceed URL length limits):
+   ```
+   vscode://xpl.chat-uri/startChat?prompt=COMPRESSED_BASE64_DATA&gzip=1
+   ```
+   
+   To compress a prompt, use pako with deflate:
+   ```javascript
+   import pako from 'pako';
+   
+   function compress(str) {
+     const bytes = pako.deflate(str, { level: 9 });
+     return btoa(bytes.reduce((s, n) => s + String.fromCharCode(n), ''));
+   }
+   
+   const compressed = encodeURIComponent(compress("Your long prompt here..."));
+   const uri = `vscode://xpl.chat-uri/startChat?prompt=${compressed}&gzip=1`;
    ```
 
 ## Testing
